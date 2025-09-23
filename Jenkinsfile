@@ -21,7 +21,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Docker image is being built"
-                sh 'docker build -t ${DOCKER_IMAGE}_${env.BUILD_NUMBER} .'
+                sh'''
+                  docker build -t "${DOCKER_IMAGE}_${env.BUILD_NUMBER}" .
+                '''
             }
         }
         stage('Push Docker Image and Update Helm') {
@@ -29,7 +31,9 @@ pipeline {
                 echo "Using the docker credentials pusing the image to Docker Hub"
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push ${DOCKER_IMAGE}_${env.BUILD_NUMBER}'
+                    sh''' 
+                       docker push "${DOCKER_IMAGE}_${env.BUILD_NUMBER}"
+                    '''
                 }
                  sh'''
                       sed -i 's|Tag: "FLASK_APP.*"|Tag: "FLASK_APP_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
