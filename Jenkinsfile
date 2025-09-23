@@ -35,14 +35,16 @@ pipeline {
             }
         }
         stage('Update ARGO Tag') {
-            sh '''
-              sed -i 's|Tag: "FLASK_APP.*"|Tag: "FLASK_APP_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
-              git config user.email 'rajujogi.t@gmail.com'
-              git config user.name 'jogiraju'
-              git add flask-restapi-chart/values.yaml
-              git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
-              git push origin main 
-            '''
+            steps {
+		    sh '''
+		      sed -i 's|Tag: "FLASK_APP.*"|Tag: "FLASK_APP_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
+		      git config user.email 'rajujogi.t@gmail.com'
+		      git config user.name 'jogiraju'
+		      git add flask-restapi-chart/values.yaml
+		      git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
+		      git push origin main 
+		    '''
+            }
         }
     }
 }
