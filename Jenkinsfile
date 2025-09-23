@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = '4769/flask-restapi'
-        TAG = 'FLASK-APP'
         REGISTRY = '4769/flask-restapi'
     }
 
@@ -22,9 +21,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo "Docker image is being built"
-                sh'''
-                  docker build -t "${DOCKER_IMAGE}.${env.BUILD_NUMBER}" .
-                '''
+                sh 'docker build -t ${DOCKER_IMAGE}:${env.BUILD_NUMBER} .'
             }
         }
         stage('Push Docker Image and Update Helm') {
@@ -32,12 +29,10 @@ pipeline {
                 echo "Using the docker credentials pusing the image to Docker Hub"
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh''' 
-                       docker push "${DOCKER_IMAGE}:${TAG}_${env.BUILD_NUMBER}"
-                    '''
+                    sh 'docker push ${DOCKER_IMAGE}:${env.BUILD_NUMBER}
                 }
                  sh'''
-                      sed -i 's|Tag: "FLASK_APP.*"|Tag: "FLASK_APP_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
+                      sed -i 's|Tag: ".*"|Tag: "${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
                       git config user.email 'rajujogi.t@gmail.com'
                       git config user.name 'jogiraju'
                       git add flask-restapi-chart/values.yaml
