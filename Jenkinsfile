@@ -13,11 +13,15 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
             }
         }
-
+        stage('Display Build Number') {
+            steps {
+                echo "The current build number is: ${env.BUILD_NUMBER}"
+            }
+        }
         stage('Build Docker Image') {
             steps {
                 echo "Docker image is being built"
-                sh 'docker build -t ${DOCKER_IMAGE} .'
+                sh 'docker build -t ${DOCKER_IMAGE}_${env.BUILD_NUMBER} .'
             }
         }
 
@@ -26,10 +30,17 @@ pipeline {
                 echo "Using the docker credentials pusing the image to Docker Hub"
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push ${DOCKER_IMAGE}'
+                    sh 'docker push ${DOCKER_IMAGE}_${env.BUILD_NUMBER}'
                 }
             }
         }
+        stage('Update ARGO Tag') {
+            sh "sed -i 's/Tag: "FLASK_APP.*"/Tag: "FLASK_APP_${env.BUILD_NUMBER}"/g' flask-restapi-chart/values.yaml"
+            sh "git config user.email 'rajujogi.t@gmail.com'"
+            sh "git config user.name 'jogiraju'"
+            sh "git add flask-restapi-chart/values.yaml"
+            sh "git commit -m 'Update image tag to ${env.BUILD_NUMBER}'"
+            sh "git push origin main" 
+        }
     }
 }
-
