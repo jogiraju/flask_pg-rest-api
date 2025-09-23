@@ -39,7 +39,7 @@ pipeline {
                 }
                 git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
                 sh'''
-                   sed -ie "s/^  tag:.*\$/tag: \"flask-app_${BUILD_ID}\"/g" values.yaml
+                   sed -ie "s/^  tag:.*\$/  tag: \"flask-app_${BUILD_ID}\"/g" values.yaml
                 ''' 
                 withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 
