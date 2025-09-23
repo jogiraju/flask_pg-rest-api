@@ -44,8 +44,7 @@ pipeline {
                       git config --global user.password "${GIT_PASSWORD}"
                       git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
-                      git remote set-url origin https://github.com/jogiraju/argo-flask-restapi.git
-                      git push origin main
+                      git push --set-upstream origin main
                    '''
                 }
             }
