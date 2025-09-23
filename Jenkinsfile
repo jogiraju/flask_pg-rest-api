@@ -23,7 +23,7 @@ pipeline {
                 echo "Docker image is being built"
                 sh 'docker build -t ${DOCKER_IMAGE} .'
                 echo "Docker image is being tagged"
-                sh 'docker image tag ${DOCKER_IMAGE} ${DOCKER_IMAGE}_${env.BUILD_NUMBER}'
+                sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:FLASK-APP_${env.BUILD_NUMBER}"
             }
         }
         stage('Push Docker Image and Update Helm') {
