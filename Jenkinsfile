@@ -43,7 +43,6 @@ pipeline {
                       git config user.name 'jogiraju'
                       git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
-                      git remote add origin https://github.com/jogiraju/argo-flask-restapi.git 
                       git push origin main
                  '''
             }
