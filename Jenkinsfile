@@ -40,11 +40,10 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                    sh '''
                       sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' values.yaml
-                      git config --global user.name "${GIT_USERNAME}"
-                      git config --global user.password "${GIT_PASSWORD}"
+                      echo "${GIT_PASSWORD}" | gh auth login --with-token --hostname github.com
                       git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
-                      git push --set-upstream origin main
+                      git push origin main
                    '''
                 }
             }
