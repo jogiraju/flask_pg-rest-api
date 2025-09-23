@@ -40,9 +40,9 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                    sh '''
                       sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' values.yaml
-                      echo "${GIT_PASSWORD}" | gh auth login --with-token --hostname github.com
                       git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
+                      git remote set-url origin 'https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/jogiraju/argo-flask-restapi.git'
                       git push origin main
                    '''
                 }
