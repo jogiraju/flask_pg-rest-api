@@ -22,7 +22,7 @@ pipeline {
             steps {
                 echo "Docker image is being built"
                 sh'''
-                  docker build -t "${DOCKER_IMAGE}_${env.BUILD_NUMBER}" .
+                  docker build -t "${DOCKER_IMAGE}\.${env.BUILD_NUMBER}" .
                 '''
             }
         }
