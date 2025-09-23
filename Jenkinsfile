@@ -2,7 +2,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = '4769/flask-restapi:flask-app'
+        DOCKER_IMAGE = '4769/flask-restapi'
+        TAG = 'FLASK-APP'
         REGISTRY = '4769/flask-restapi'
     }
 
@@ -32,7 +33,7 @@ pipeline {
                 withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
                     sh''' 
-                       docker push "${DOCKER_IMAGE}_${env.BUILD_NUMBER}"
+                       docker push "${DOCKER_IMAGE}:${TAG}_${env.BUILD_NUMBER}"
                     '''
                 }
                  sh'''
