@@ -23,7 +23,7 @@ pipeline {
                 echo "Docker image is being built"
                 sh 'docker build -t ${DOCKER_IMAGE} .'
                 echo "Docker image is being tagged"
-                sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:FLASK-APP_${env.BUILD_NUMBER}"
+                sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:flask-app_${env.BUILD_NUMBER}"
             }
         }
         stage('Push Docker Image and Update Helm') {
@@ -37,7 +37,7 @@ pipeline {
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
                 sh'''
-                      sed -i 's|Tag: "FLAS-APP.*"|Tag: "FLASK-APP_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
+                      sed -i 's|Tag: "flask-app.*"|Tag: "flask-app_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
                       git config user.email 'rajujogi.t@gmail.com'
                       git config user.name 'jogiraju'
                       git add flask-restapi-chart/values.yaml
