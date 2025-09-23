@@ -1,0 +1,42 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: {{ include "flask-restapi-chart.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{ include "flask-restapi-chart.labels" . | nindent 4 }}
+spec:
+  serviceName: {{ include "flask-restapi-chart.fullname" . }}-headless
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      {{ include "flask-restapi-chart.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        {{ include "flask-restapi-chart.selectorLabels" . | nindent 8 }}
+    spec:
+      containers:
+        - name: {{ .Chart.Name }}
+          image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag | default .Chart.AppVersion }}"
+          imagePullPolicy: {{ .Values.postgres.image.pullPolicy }}
+          ports:
+            - name: pgdb 
+              containerPort:  {{ .Values.postgres.service.port }} 
+              protocol: TCP
+          envFrom:
+            - secretRef:
+                name: db-secret      
+          volumeMounts:
+            - name: pgdata
+              mountPath: /var/lib/postgresql/data 
+              subPath: data
+  volumeClaimTemplates:
+    - metadata:
+        name: pgdata
+      spec:
+        accessModes: [ "ReadWriteOnce" ]
+        storageClassName: {{ .Values.postgres.storageClass }}
+        resources:
+          requests:
+            storage: {{ .Values.postgres.storageSize }}

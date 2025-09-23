@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1  
+kind: Application
+metadata:
+  name: flask-restapi
+  namespace: argocd
+spec:
+  project: default
+
+  source:
+    repoURL: https://github.com/jogiraju/flask_pg-rest-api.git
+    targetRevision: HEAD
+    path: flask-restapi-chart
+    helm:
+      valueFiles:
+        - values.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: flaskpg-demo 
+
+  syncPolicy:
+    syncOptions:
+    - CreateNamespace=true
+    automated:
+      selfHeal: true
+      prune: true
