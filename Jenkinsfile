@@ -29,7 +29,7 @@ pipeline {
         stage('Push Docker Image and Update Helm') {
             environment {
                NEW_DOCKER_IMAGE = "${DOCKER_IMAGE}_${env.BUILD_NUMBER}"
-               BUILD_ID = ${env.BUILD_NUMBER}
+               BUILD_ID = "${env.BUILD_NUMBER}"
             }
             steps {
                 echo "Using the docker credentials pusing the image to Docker Hub"
