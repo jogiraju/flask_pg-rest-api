@@ -5,3 +5,4 @@ docker build -t 4769/flask-restapi:flask-app .
 docker login -n4769
 (if required)
 docker push 4769/flask-restapi:flask-app
+Jenkinsfile is added at the root for Continuous Integration.
