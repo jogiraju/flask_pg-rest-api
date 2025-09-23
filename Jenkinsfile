@@ -36,12 +36,14 @@ pipeline {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
+                git branch: 'main', url: 'https://github.com/jogiraju/agro-flask-restapi.git'
                 sh'''
-                      sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
+                      sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' values.yaml
                       git config user.email 'rajujogi.t@gmail.com'
                       git config user.name 'jogiraju'
-                      git add flask-restapi-chart/values.yaml
+                      git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
+                      git remote add origin https://github.com/jogiraju/agro-flask-restapi.git 
                       git push origin main
                  '''
             }
