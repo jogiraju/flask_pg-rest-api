@@ -9,7 +9,7 @@ pipeline {
     stages {
         stage('Checkout Source') {
             steps {
-                git branch: 'main', url: 'https://github.com/your-org/your-flask-app.git'
+                git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
             }
         }
 
