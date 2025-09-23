@@ -37,15 +37,17 @@ pipeline {
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
                 git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
-                sh'''
+                withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                   sh '''
                       sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' values.yaml
-                      git config --global user.email 'rajujogi.t@gmail.com'
-                      git config --global user.name 'jogiraju'
+                      git config --global user.name "${GIT_USERNAME}"
+                      git config --global user.password "${GIT_PASSWORD}"
                       git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
                       git remote set-url origin https://github.com/jogiraju/argo-flask-restapi.git
                       git push origin main
-                 '''
+                   '''
+                }
             }
         }
     }
