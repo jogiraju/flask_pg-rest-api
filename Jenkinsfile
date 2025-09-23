@@ -24,7 +24,6 @@ pipeline {
                 sh 'docker build -t ${DOCKER_IMAGE}_${env.BUILD_NUMBER} .'
             }
         }
-
         stage('Push Docker Image') {
             steps {
                 echo "Using the docker credentials pusing the image to Docker Hub"
@@ -36,7 +35,7 @@ pipeline {
         }
         stage('Update ARGO Tag') {
             steps {
-		    sh '''
+		    sh'''
 		      sed -i 's|Tag: "FLASK_APP.*"|Tag: "FLASK_APP_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
 		      git config user.email 'rajujogi.t@gmail.com'
 		      git config user.name 'jogiraju'
