@@ -23,7 +23,7 @@ pipeline {
                 echo "Docker image is being built"
                 sh 'docker build -t ${DOCKER_IMAGE} .'
                 echo "Docker image is being tagged"
-                sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:flask-app_${env.BUILD_NUMBER}"
+                sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:flask-app_${env.BUILD_NUMBER}_"
             }
         }
         stage('Push Docker Image and Update Helm') {
