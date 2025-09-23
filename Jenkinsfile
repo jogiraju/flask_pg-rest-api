@@ -39,10 +39,11 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
                 sh'''
                       sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' values.yaml
-                      git config user.email 'rajujogi.t@gmail.com'
-                      git config user.name 'jogiraju'
+                      git config --global user.email 'rajujogi.t@gmail.com'
+                      git config --global user.name 'jogiraju'
                       git add values.yaml
                       git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
+                      git remote set-url origin https://github.com/jogiraju/argo-flask-restapi.git
                       git push origin main
                  '''
             }
