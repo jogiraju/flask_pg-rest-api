@@ -38,7 +38,9 @@ pipeline {
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
                 git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
-                sh 'sed -iE "s|flask-app_[0-9]+_|flask-app_${BUILD_ID}_|g" values.yaml'
+                sh'''
+                  sed -iE "s|flask-app_[0-9]\\+_|flask-app_${BUILD_ID}_|g" values.yaml
+                '''
                 withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 
                    sh '''
