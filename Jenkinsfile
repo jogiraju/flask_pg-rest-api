@@ -36,7 +36,7 @@ pipeline {
                     sh 'echo $PASS | docker login -u $USER --password-stdin'
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
-                git branch: 'main', url: 'https://github.com/jogiraju/agro-flask-restapi.git'
+                git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
                 sh'''
                       sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' values.yaml
                       git config user.email 'rajujogi.t@gmail.com'
