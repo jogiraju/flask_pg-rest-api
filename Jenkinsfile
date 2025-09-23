@@ -37,7 +37,7 @@ pipeline {
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
                 sh'''
-                      sed -i 's|Tag: "flask-app.*"|Tag: "flask-app_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
+                      sed -i 's|tag: "flask-app.*"|tag: "flask-app_${env.BUILD_NUMBER}"|g' flask-restapi-chart/values.yaml
                       git config user.email 'rajujogi.t@gmail.com'
                       git config user.name 'jogiraju'
                       git add flask-restapi-chart/values.yaml
