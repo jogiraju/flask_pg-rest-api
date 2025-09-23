@@ -38,8 +38,11 @@ pipeline {
                     sh 'docker push ${NEW_DOCKER_IMAGE}'
                 }
                 git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
-                sh 'sed -i "s|tag: "flask-app.*"|tag: "flask-app_${BUILD_ID}"|g" values.yaml'
+                sh'''
+                   sed -ie 's/^  tag:.*$/tag: "flask-app_${BUILD_ID}"/g' values.yaml
+                '''
                 withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+
                    sh '''
                       git add values.yaml
                       git commit -m 'Update image tag to new BUILD_NUMBER'
