@@ -29,6 +29,7 @@ pipeline {
         stage('Push Docker Image and Update Helm') {
             environment {
                NEW_DOCKER_IMAGE = "${DOCKER_IMAGE}_${env.BUILD_NUMBER}"
+               BUILD_ID = ${env.BUILD_NUMBER}
             }
             steps {
                 echo "Using the docker credentials pusing the image to Docker Hub"
@@ -39,9 +40,9 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
                 withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                    sh '''
-                      sed -i "s|tag: \"flask-app.*\"|tag: \"flask-app_${env.BUILD_NUMBER}\"|g" values.yaml
+                      sed -i "s|tag: \"flask-app.*\"|tag: \"flask-app_${BUILD_ID}\"|g" values.yaml
                       git add values.yaml
-                      git commit -m 'Update image tag to ${env.BUILD_NUMBER}'
+                      git commit -m 'Update image tag to ${BUILD_ID}'
                       git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/argo-flask-restapi.git
                       git push origin main
                    '''
