@@ -31,7 +31,10 @@ pipeline {
                 echo "Building docker image with tag: ${env.MYTAG}"
                 sh 'whereis docker' 
                 sh'''
+                  CWD=`pwd`
                   ls -l
+                  cd $CWD
+                  echo "$CWS"
                   docker build -t "${DOCKER_IMAGE}" -f ./Dockerfile . 
                 '''
                 echo "Tagged docker image: ${env.NEW_DOCKER_IMAGE}"                    
