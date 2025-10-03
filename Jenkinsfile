@@ -47,7 +47,7 @@ pipeline {
                       withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                           sh'''
                             echo $PASS | docker login -u $USER --password-stdin
-                            docker push -a "${DOCKER_IMAGE}" 
+                            docker push "${env.NEW_DOCKER_IMAGE}" 
                           '''
                       }
                       git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
