@@ -20,11 +20,11 @@ pipeline {
         }
         stage('Build Docker Image') {
             steps {
-                echo "Docker image is being built"
-                sh 'docker build -t ${DOCKER_IMAGE} .'
-                echo "Docker image is being tagged"
+                echo "Docker image is being built & tagged"
                 script {
                     def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
+                    echo "Building docker image"
+                    sh 'docker build -t ${DOCKER_IMAGE} .'
                     echo "Tagged docker image: ${DOCKER_IMAGE}_${ID}"                    
                     sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:flask-app_${ID}"
                 }                
