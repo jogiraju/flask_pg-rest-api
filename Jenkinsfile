@@ -30,6 +30,9 @@ pipeline {
                 echo "Docker image is being built & tagged"
                 echo "Building docker image with tag: ${env.MYTAG}"
                 sh 'whereis docker' 
+                sh'''
+                  ls -l
+                '''
                 sh 'docker build -t ${DOCKER_IMAGE} .'
                 echo "Tagged docker image: ${env.NEW_DOCKER_IMAGE}"                    
                 sh "docker image tag ${DOCKER_IMAGE} ${env.NEW_DOCKER_IMAGE}"
