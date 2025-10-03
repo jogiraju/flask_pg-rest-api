@@ -48,7 +48,7 @@ pipeline {
                           sed -iE "s|"flask-app.*"|"flask-app_${ID}"|g" values.yaml
                         ''' 
                       }                      
-                      withCredentials([usernamePassword(credentialsId: 'my-github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                      withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         sh '''
                             git add values.yaml
                             git commit -m 'Updated image tag'
