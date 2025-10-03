@@ -42,13 +42,16 @@ pipeline {
             }
         }
         stage('Push Docker Image and Update Helm') {           
+            environment {
+                  NEW_TAG = "${env.NEW_DOCKER_IMAGE}"
+            }
             steps {
                       echo "Using the docker credentials pusing the image to Docker Hub"
                       withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                          sh'''
+                          sh"""
                             echo $PASS | docker login -u $USER --password-stdin
-                            docker push "${env.NEW_DOCKER_IMAGE}" 
-                          '''
+                            docker push ${NEW_TAG} 
+                          """
                       }
                       git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
                       withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
