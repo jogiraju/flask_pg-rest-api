@@ -17,7 +17,7 @@ pipeline {
                 echo "The current build number is: ${env.BUILD_NUMBER}"
                 script {
                     def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
-                    env.MYTAG = ${ID}
+                    env.MYTAG = "${ID}"
                     env.NEW_DOCKER_IMAGE = "${DOCKER_IMAGE}_${ID}"
                 }
             }
