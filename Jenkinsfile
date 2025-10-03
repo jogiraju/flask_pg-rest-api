@@ -32,7 +32,7 @@ pipeline {
                 sh 'whereis docker' 
                 sh'''
                   ls -l
-                  docker build -t ${DOCKER_IMAGE} -f Dockerfile . 
+                  docker build -t "${DOCKER_IMAGE}" -f ./Dockerfile . 
                 '''
                 echo "Tagged docker image: ${env.NEW_DOCKER_IMAGE}"                    
                 sh "docker image tag ${DOCKER_IMAGE} ${env.NEW_DOCKER_IMAGE}"
