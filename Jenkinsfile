@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         DOCKER_IMAGE = '4769/flask-restapi:flask-app'
-        REGISTRY = '4769/flask-restapi'
     }
 
     stages {
@@ -13,21 +12,26 @@ pipeline {
                 git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
             }
         }
-        stage('Display Build Number') {
+        stage('Set Variables') {
             steps {
                 echo "The current build number is: ${env.BUILD_NUMBER}"
+                script {
+                    def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
+                    env.MYTAG = ${ID}
+                    env.NEW_DOCKER_IMAGE = "${DOCKER_IMAGE}_${ID}"
+                }
             }
         }
         stage('Build Docker Image') {
+            options {
+                    timeout(time: 30, unit: 'MINUTES') 
+            }
             steps {
                 echo "Docker image is being built & tagged"
-                script {
-                    def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
-                    echo "Building docker image"
-                    sh 'docker build -t ${DOCKER_IMAGE} .'
-                    echo "Tagged docker image: ${DOCKER_IMAGE}_${ID}"                    
-                    sh "docker image tag ${DOCKER_IMAGE} ${REGISTRY}:flask-app_${ID}"
-                }                
+                echo "Building docker image with tag: ${env.MYTAG}"
+                sh 'docker build -t ${DOCKER_IMAGE} .'
+                echo "Tagged docker image: ${evn.NEW_DOCKER_IMAGE}"                    
+                sh "docker image tag ${DOCKER_IMAGE} ${env.NEW_DOCKER_IMAGE}"
             }
         }
         stage('Push Docker Image and Update Helm') {           
@@ -35,21 +39,12 @@ pipeline {
                       echo "Using the docker credentials pusing the image to Docker Hub"
                       withCredentials([usernamePassword(credentialsId: 'docker-hub-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                           sh 'echo $PASS | docker login -u $USER --password-stdin'
-                          script {
-                            def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
-                            def NEW_DOCKER_IMAGE = "${DOCKER_IMAGE}_${ID}"
-                            sh 'docker push ${NEW_DOCKER_IMAGE}'
-                          }                          
+                          sh 'docker push ${env.NEW_DOCKER_IMAGE}'
                       }
                       git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
-                      script {
-                        def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
-                        sh'''
-                          sed -iE "s|"flask-app.*"|"flask-app_${ID}"|g" values.yaml
-                        ''' 
-                      }                      
                       withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         sh '''
+                            sed -iE "s|"flask-app.*"|"flask-app_${env.MYTAG}"|g" values.yaml
                             git add values.yaml
                             git commit -m 'Updated image tag'
                             git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/argo-flask-restapi.git

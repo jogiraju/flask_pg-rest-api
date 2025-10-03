@@ -1,0 +1,29 @@
+# Ignore comments
+# Lines starting with '#' are comments
+
+# Ignore common development files and directories
+.git
+.gitignore
+.DS_Store
+node_modules
+dist
+build
+logs
+tmp/
+
+# Ignore specific file types
+*.log
+*.tmp
+*.bak
+
+# Ignore entire directories
+my_sensitive_data/
+test_data/
+
+# Exclude everything except a specific directory
+# This requires placing '*' on the first line, followed by exclamation marks for exceptions
+*
+!src/
+!src/**/*
+!Dockerfile
+!.dockerignore
