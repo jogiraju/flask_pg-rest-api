@@ -1,7 +1,7 @@
 pipeline {
     agent any
     triggers {
-        pollSCM('H/5 * * * *', ignorePaths: 'helm-chart/values.yaml,helm-chart/templates/**')
+        pollSCM(cron: 'H/5 * * * *', ignorePaths: 'helm-chart/values.yaml,helm-chart/templates/**')
     }
     environment {
         DOCKER_IMAGE = '4769/flask-restapi:flask-app'
