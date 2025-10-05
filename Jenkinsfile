@@ -1,7 +1,15 @@
 pipeline {
     agent any
     triggers {
-        pollSCM('H/5 * * * *')
+        pollSCM('H/5 * * * *') { // Poll every 5 minutes
+            additionalBehaviors {
+                // Exclude commits with messages matching a regex
+                // This example excludes commits with messages containing "skip ci" or "no build"
+                org.jenkinsci.plugins.gitclient.extensions.impl.MessageExclusion(
+                    messageRegex: '(?i)(skip ci|updated image tag)' 
+                )
+            }
+        }
     }
     environment {
         DOCKER_IMAGE = '4769/flask-restapi:flask-app'
