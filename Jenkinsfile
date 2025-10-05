@@ -67,14 +67,16 @@ pipeline {
                             docker push ${NEW_TAG}
                           """
                       }
-                      sh"""
-                          sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
-                      """
-                      sh'''
-                            git add helm-chart/values.yaml
-                            git commit -m 'Updated image tag'                            
-                            git push origin main
-                      '''                      
+                      withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+			      sh"""
+				  sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
+			      """
+			      sh'''
+				    git add helm-chart/values.yaml
+				    git commit -m 'Updated image tag'                            
+				    git push origin main
+			      '''                      
+                      }
             }
         }
     }
