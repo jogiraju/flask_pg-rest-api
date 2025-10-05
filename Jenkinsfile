@@ -1,6 +1,8 @@
 pipeline {
     agent any
-
+    triggers {
+        pollSCM('H/5 * * * *', ignorePaths: 'helm-chart/values.yaml,helm-chart/templates/**')
+    }
     environment {
         DOCKER_IMAGE = '4769/flask-restapi:flask-app'
     }
@@ -8,8 +10,10 @@ pipeline {
     stages {
         stage('Checkout Source') {
             steps {
-                echo "App is being accessed from main branch of GitHub Repository"
-                git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
+                echo "App is being accessed from main branch of GitHub Repository"                
+                checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], 
+                               userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
+                               changelog: false, poll: false] 
             }
         }
         stage('Set Variables') {
@@ -24,24 +28,24 @@ pipeline {
         }
         stage('Build Docker Image') {
             options {
-                    timeout(time: 45, unit: 'MINUTES') 
+                    timeout(time: 45, unit: 'MINUTES')
             }
             steps {
                 echo "Docker image is being built & tagged"
                 echo "Building docker image with tag: ${env.MYTAG}"
-                sh 'whereis docker' 
+                sh 'whereis docker'
                 sh'''
                   CWD=`pwd`
                   ls -l
                   cd $CWD
                   echo "$CWS"
-                  docker build -t "${DOCKER_IMAGE}" -f ./Dockerfile . 
+                  docker build -t "${DOCKER_IMAGE}" -f ./Dockerfile .
                 '''
-                echo "Tagged docker image: ${env.NEW_DOCKER_IMAGE}"                    
+                echo "Tagged docker image: ${env.NEW_DOCKER_IMAGE}"
                 sh "docker image tag ${DOCKER_IMAGE} ${env.NEW_DOCKER_IMAGE}"
             }
         }
-        stage('Push Docker Image and Update Helm') {           
+        stage('Push Docker Image and Update Helm') {
             environment {
                   NEW_TAG = "${env.NEW_DOCKER_IMAGE}"
             }
@@ -50,21 +54,17 @@ pipeline {
                       withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                           sh"""
                             echo $PASS | docker login -u $USER --password-stdin
-                            docker push ${NEW_TAG} 
+                            docker push ${NEW_TAG}
                           """
                       }
-                      git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
-                      withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        sh"""
-                           sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
-                        """
-                        sh '''
+                      sh"""
+                          sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
+                      """
+                      sh'''
                             git add helm-chart/values.yaml
-                            git commit -m 'Updated image tag'
-                            git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/flask_pg-rest-api.git
+                            git commit -m 'Updated image tag'                            
                             git push origin main
-                        '''
-                      }
+                      '''                      
             }
         }
     }
