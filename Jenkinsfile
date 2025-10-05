@@ -67,6 +67,7 @@ pipeline {
                             docker push ${NEW_TAG}
                           """
                       }
+                      git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
                       withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
 			      sh"""
 				  sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
@@ -76,7 +77,7 @@ pipeline {
 				    git commit -m "Updated image tag"
                                     git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/flask_pg-rest-api.git
 				    git push origin main
-			      '''                      
+			      ''' 
                       }
             }
         }
