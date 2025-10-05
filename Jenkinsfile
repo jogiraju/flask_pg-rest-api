@@ -5,6 +5,7 @@ pipeline {
     }
     stages {
         stage('Check Commit Message') {
+             steps {
         	script {
             		def commitMessage = sh(returnStdout: true, script: 'git log -1 --pretty=%B').trim()
             		if (commitMessage.contains('[Updated image tag]') || commitMessage.contains('[skip ci]')) {
@@ -16,6 +17,7 @@ pipeline {
                 		echo 'Proceeding with the build.'
             		}
         	}
+            }
         }
         stage('Checkout Source') {
             steps {
