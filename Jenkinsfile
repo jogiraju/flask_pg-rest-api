@@ -1,7 +1,7 @@
 pipeline {
     agent any
     triggers {
-        pollSCM(scmpoll_spec: 'H/5 * * * *', ignorePaths: 'helm-chart/values.yaml,helm-chart/templates/**')
+        pollSCM('H/5 * * * *')
     }
     environment {
         DOCKER_IMAGE = '4769/flask-restapi:flask-app'
@@ -11,9 +11,19 @@ pipeline {
         stage('Checkout Source') {
             steps {
                 echo "App is being accessed from main branch of GitHub Repository"                
-                checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], 
-                               userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
-                               changelog: false, poll: false] 
+                checkout([
+                           $class: 'GitSCM', 
+                           branches: [[name: 'main']], 
+                           userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
+                           changelog: false, 
+                           poll: false,
+                           additionalBehaviours: [
+                                [
+                            $class: 'PathRestriction', // Use 'PathRestriction' to ignore paths
+                            excludedRegions: 'helm-chart/values.yaml' // Use a regular expression
+                            ]
+                           ]
+                ]) 
             }
         }
         stage('Set Variables') {
