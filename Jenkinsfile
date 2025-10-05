@@ -1,37 +1,28 @@
 pipeline {
-    agent any
-    triggers {
-        pollSCM('H/5 * * * *') { // Poll every 5 minutes
-            additionalBehaviors {
-                // Exclude commits with messages matching a regex
-                // This example excludes commits with messages containing "skip ci" or "no build"
-                org.jenkinsci.plugins.gitclient.extensions.impl.MessageExclusion(
-                    messageRegex: '(?i)(skip ci|updated image tag)' 
-                )
-            }
-        }
-    }
+    agent any    
     environment {
         DOCKER_IMAGE = '4769/flask-restapi:flask-app'
     }
-
     stages {
+        stage('Check Commit Message') {
+        	script {
+            		def commitMessage = sh(returnStdout: true, script: 'git log -1 --pretty=%B').trim()
+            		if (commitMessage.contains('[Updated image tag]') || commitMessage.contains('[skip ci]')) {
+                		echo 'Commit message contains skip instruction. Aborting build.'
+                		// Setting the build status and exiting gracefully.
+                		currentBuild.result = 'ABORTED'
+                		return
+            		} else {
+                		echo 'Proceeding with the build.'
+            		}
+        	}
+        }
         stage('Checkout Source') {
             steps {
-                echo "App is being accessed from main branch of GitHub Repository"                
-                checkout([
-                           $class: 'GitSCM', 
-                           branches: [[name: 'main']], 
-                           userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
-                           changelog: false, 
-                           poll: false,
-                           additionalBehaviours: [
-                                [
-                            $class: 'PathRestriction', // Use 'PathRestriction' to ignore paths
-                            excludedRegions: 'helm-chart/values.yaml' // Use a regular expression
-                            ]
-                           ]
-                ]) 
+                echo "App is being accessed from main branch of GitHub Repository"
+                checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], 
+                               userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
+                               changelog: false, poll: false] 
             }
         }
         stage('Set Variables') {
@@ -77,15 +68,15 @@ pipeline {
                       }
                       git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
                       withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-			      sh"""
-				  sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
-			      """
-			      sh'''
-				    git add helm-chart/values.yaml
-				    git commit -m "Updated image tag"
+                              sh"""
+                                  sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
+                              """
+                              sh'''
+                                    git add helm-chart/values.yaml
+                                    git commit -m "Updated image tag"
                                     git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/flask_pg-rest-api.git
-				    git push origin main
-			      ''' 
+                                    git push origin main
+                              '''
                       }
             }
         }
