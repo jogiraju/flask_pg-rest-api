@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "flask-restapi-chart.fullname" . }}-{{ .Values.postgres.service.type }} # Often named after the StatefulSet
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "flask-restapi-chart.labels" . | nindent 4 }}
+spec:
+  ports:
+    - port: {{ .Values.postgres.service.port }}
+      targetPort: pgdb 
+      protocol: TCP
+      name: pgdb 
+  clusterIP: None # This makes it a headless service
+  selector:
+    {{- include "flask-restapi-chart.selectorLabels" . | nindent 4 }}

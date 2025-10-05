@@ -1,0 +1,14 @@
+{{- if .Values.pdb.enabled }}
+apiVersion: policy/v1
+kind: PodDisruptionBudget
+metadata:
+  name: {{ include "flask-restapi-chart.fullname" . }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    {{- include "flask-restapi-chart.labels" . | nindent 4 }}
+spec:
+  minAvailable: {{ .Values.pdb.minAvailable }}
+  selector:
+    matchLabels:
+      {{- include "flask-restapi-chart.selectorLabels" . | nindent 6 }}
+{{- end }}
