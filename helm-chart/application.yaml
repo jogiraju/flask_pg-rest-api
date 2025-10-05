@@ -9,7 +9,7 @@ spec:
   source:
     repoURL: https://github.com/jogiraju/flask_pg-rest-api.git
     targetRevision: HEAD
-    path: heml-chart
+    path: helm-chart
     helm:
       valueFiles:
         - values.yaml
