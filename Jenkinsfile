@@ -73,7 +73,8 @@ pipeline {
 			      """
 			      sh'''
 				    git add helm-chart/values.yaml
-				    git commit -m 'Updated image tag'                                               git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/flask_pg-rest-api.git
+				    git commit -m "Updated image tag"
+                                    git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/flask_pg-rest-api.git
 				    git push origin main
 			      '''                      
                       }
