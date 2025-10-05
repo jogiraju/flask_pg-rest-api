@@ -24,7 +24,7 @@ pipeline {
                 echo "App is being accessed from main branch of GitHub Repository"
                 checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], 
                                userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
-                               changelog: false, poll: false] 
+                               ] 
             }
         }
         stage('Set Variables') {
