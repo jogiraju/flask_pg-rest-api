@@ -24,7 +24,8 @@ pipeline {
                     if (!appChanged) {
                         echo "No Python files under app/ changed — skipping pipeline."
                         currentBuild.result = 'SUCCESS'
-                        error("No relevant changes detected.")
+                        //error("No relevant changes detected.")
+                        return
                     }
                 }
             }
