@@ -72,7 +72,7 @@ pipeline {
                 script {
                     sh """
                         echo "Updating image tag in helm-chart/values.yaml to ${IMAGE_TAG}"
-                        sed -i 's|  tag:.*|  tag: ${IMAGE_TAG}|' helm-chart/values.yaml
+                        sed -i 's|tag: "flask-app.*|  tag: "${IMAGE_TAG}"|' helm-chart/values.yaml
 
                         git config user.name "jenkins-bot"
                         git config user.email "jenkins@local"
