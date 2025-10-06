@@ -35,7 +35,7 @@ pipeline {
             steps {
                 script {
                     // Read current tag from helm-chart/values.yaml
-                    def currentTag = sh(script: "grep '  tag:' helm-chart/values.yaml | awk '{print \$2}'", returnStdout: true).trim()
+                    def currentTag = sh(script: "grep '  tag:' helm-chart/values.yaml | awk 'NR==1 {print \$2}'", returnStdout: true).trim()
                     echo "Current tag in values.yaml: ${currentTag}"
 
                     // Toggle between 1 and 2
