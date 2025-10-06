@@ -89,6 +89,19 @@ pipeline {
 			    git push origin HEAD:main
 			"""
                     }
+                    git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
+                    withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                      sh """
+                            echo "Updating image tag in values.yaml to ${IMAGE_TAG}"
+                            sed -i 's|  tag:.*|  tag: ${IMAGE_TAG}|' values.yaml
+                      """
+                      sh '''
+                            git add values.yaml
+                            git commit -m 'Updated image tag'
+                            git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/argo-flask-restapi.git
+                            git push origin main
+                      '''
+                    }
                 }
             }
         }
