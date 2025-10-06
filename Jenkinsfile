@@ -1,86 +1,92 @@
 pipeline {
-    agent any    
-    environment {
-        DOCKER_IMAGE = '4769/flask-restapi:flask-app'
+    agent any
+
+    triggers {
+        // Poll GitHub every 5 minutes
+        pollSCM('H/5 * * * *')
     }
+
+    environment {
+        DOCKERHUB_CREDENTIALS = credentials('docker-cred')
+        IMAGE_NAME = ''4769/flask-restapi'
+    }
+
     stages {
-        stage('Check Commit Message') {
-             steps {
-        	script {
-            		def commitMessage = sh(returnStdout: true, script: 'git log -1 --pretty=%B').trim()
-            		if (commitMessage.contains('[Updated image tag]') || commitMessage.contains('[skip ci]')) {
-                		echo 'Commit message contains skip instruction. Aborting build.'
-                		// Setting the build status and exiting gracefully.
-                		currentBuild.result = 'ABORTED'
-                		return
-            		} else {
-                		echo 'Proceeding with the build.'
-            		}
-        	}
-            }
-        }
-        stage('Checkout Source') {
+        stage('Check Changed Files') {
             steps {
-                echo "App is being accessed from main branch of GitHub Repository"
-                checkout scm: [$class: 'GitSCM', branches: [[name: 'main']], 
-                               userRemoteConfigs: [[credentialsId: 'github-cred', url: 'https://github.com/jogiraju/flask_pg-rest-api.git']], 
-                               ] 
-            }
-        }
-        stage('Set Variables') {
-            steps {
-                echo "The current build number is: ${env.BUILD_NUMBER}"
                 script {
-                    def ID = env.BUILD_NUMBER.toInteger() % 2 + 1
-                    env.MYTAG = "${ID}"
-                    env.NEW_DOCKER_IMAGE = "${DOCKER_IMAGE}_${ID}"
+                    // Get changed files in the latest commit
+                    def changedFiles = sh(script: "git diff --name-only HEAD~1", returnStdout: true).trim().split('\n')
+                    echo "Changed files:\n${changedFiles.join('\n')}"
+
+                    // Check if any Python files in app/ changed
+                    def appChanged = changedFiles.any { it ==~ /^app\\/.*\\.py$/ }
+                    if (!appChanged) {
+                        echo "No Python files under app/ changed — skipping pipeline."
+                        currentBuild.result = 'SUCCESS'
+                        error("No relevant changes detected.")
+                    }
                 }
             }
         }
-        stage('Build Docker Image') {
-            options {
-                    timeout(time: 45, unit: 'MINUTES')
-            }
+
+        stage('Determine Next Image Tag') {
             steps {
-                echo "Docker image is being built & tagged"
-                echo "Building docker image with tag: ${env.MYTAG}"
-                sh 'whereis docker'
-                sh'''
-                  CWD=`pwd`
-                  ls -l
-                  cd $CWD
-                  echo "$CWS"
-                  docker build -t "${DOCKER_IMAGE}" -f ./Dockerfile .
-                '''
-                echo "Tagged docker image: ${env.NEW_DOCKER_IMAGE}"
-                sh "docker image tag ${DOCKER_IMAGE} ${env.NEW_DOCKER_IMAGE}"
+                script {
+                    // Read current tag from helm-chart/values.yaml
+                    def currentTag = sh(script: "grep '  tag:' helm-chart/values.yaml | awk '{print \$2}'", returnStdout: true).trim()
+                    echo "Current tag in values.yaml: ${currentTag}"
+
+                    // Toggle between 1 and 2
+                    def nextTag = (currentTag == "flask-app_1") ? "flask-app_2" : "flask-app_1"
+                    echo "Next tag to use: ${nextTag}"
+
+                    // Export for later stages
+                    env.IMAGE_TAG = nextTag
+                }
             }
         }
-        stage('Push Docker Image and Update Helm') {
-            environment {
-                  NEW_TAG = "${env.NEW_DOCKER_IMAGE}"
+
+        stage('Build & Push Docker Image') {
+            when {
+                changeset pattern: "app/**/*.py", comparator: "GLOB"
             }
             steps {
-                      echo "Using the docker credentials pusing the image to Docker Hub"
-                      withCredentials([usernamePassword(credentialsId: 'docker-cred', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
-                          sh"""
-                            echo $PASS | docker login -u $USER --password-stdin
-                            docker push ${NEW_TAG}
-                          """
-                      }
-                      git branch: 'main', url: 'https://github.com/jogiraju/flask_pg-rest-api.git'
-                      withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                              sh"""
-                                  sed -i 's|"flask-app.*"|"flask-app_${env.MYTAG}"|g' helm-chart/values.yaml
-                              """
-                              sh'''
-                                    git add helm-chart/values.yaml
-                                    git commit -m "Updated image tag"
-                                    git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/flask_pg-rest-api.git
-                                    git push origin main
-                              '''
-                      }
+                script {
+                    sh """
+                        echo "Building Docker image with tag ${IMAGE_TAG}"
+                        docker build -t ${IMAGE_NAME}:${IMAGE_TAG} .
+                        echo "${DOCKERHUB_CREDENTIALS_PSW}" | docker login -u "${DOCKERHUB_CREDENTIALS_USR}" --password-stdin
+                        docker push ${IMAGE_NAME}:${IMAGE_TAG}
+                    """
+                }
             }
+        }
+
+        stage('Update Helm values.yaml') {
+            when {
+                changeset pattern: "app/**/*.py", comparator: "GLOB"
+            }
+            steps {
+                script {
+                    sh """
+                        echo "Updating image tag in helm-chart/values.yaml to ${IMAGE_TAG}"
+                        sed -i 's|  tag:.*|  tag: ${IMAGE_TAG}|' helm-chart/values.yaml
+
+                        git config user.name "jenkins-bot"
+                        git config user.email "jenkins@local"
+                        git add helm-chart/values.yaml
+                        git commit -m "Update Helm values.yaml with image tag ${IMAGE_TAG}"
+                        git push origin HEAD:main
+                    """
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            echo "Pipeline completed with status: ${currentBuild.currentResult}"
         }
     }
 }
