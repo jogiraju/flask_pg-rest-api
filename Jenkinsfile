@@ -8,7 +8,7 @@ pipeline {
 
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-cred')
-        IMAGE_NAME = ''4769/flask-restapi'
+        IMAGE_NAME = '4769/flask-restapi'
     }
 
     stages {
