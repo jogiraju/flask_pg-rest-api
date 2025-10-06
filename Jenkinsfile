@@ -73,13 +73,22 @@ pipeline {
                     sh """
                         echo "Updating image tag in helm-chart/values.yaml to ${IMAGE_TAG}"
                         sed -i 's|tag: "flask-app.*|  tag: "${IMAGE_TAG}"|' helm-chart/values.yaml
-
-                        git config user.name "jenkins-bot"
-                        git config user.email "jenkins@local"
-                        git add helm-chart/values.yaml
-                        git commit -m "Update Helm values.yaml with image tag ${IMAGE_TAG}"
-                        git push origin HEAD:main
                     """
+                    withCredentials([usernamePassword(credentialsId: 'github-cred',
+                                              usernameVariable: 'GIT_USER',
+                                              passwordVariable: 'GIT_TOKEN')]) {
+			sh """
+			    git config user.name "jenkins-bot"
+			    git config user.email "jenkins@local"
+
+			    # Rewrite remote URL to embed credentials
+			    git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/jogiraju/flask_pg-rest-api.git
+
+			    git add helm-chart/values.yaml
+			    git commit -m "Update Helm values.yaml with image tag ${IMAGE_TAG}" || echo "No changes to commit"
+			    git push origin HEAD:main
+			"""
+                    }
                 }
             }
         }
