@@ -1,16 +1,9 @@
 pipeline {
     agent any
-
-    triggers {
-        // Poll GitHub every 5 minutes
-        pollSCM('H/5 * * * *')
-    }
-
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-cred')
         IMAGE_NAME = '4769/flask-restapi'
     }
-
     stages {
         stage('Check Changed Files') {
             steps {
@@ -30,7 +23,6 @@ pipeline {
                 }
             }
         }
-
         stage('Determine Next Image Tag') {
             steps {
                 script {
@@ -47,7 +39,6 @@ pipeline {
                 }
             }
         }
-
         stage('Build & Push Docker Image') {
             when {
                 changeset pattern: "app/**/*.py", comparator: "GLOB"
@@ -63,7 +54,6 @@ pipeline {
                 }
             }
         }
-
         stage('Update Helm values.yaml') {
             when {
                 changeset pattern: "app/**/*.py", comparator: "GLOB"
@@ -72,41 +62,28 @@ pipeline {
                 script {
                     sh """
                         echo "Updating image tag in helm-chart/values.yaml to ${IMAGE_TAG}"
-                        sed -i 's|tag: "flask-app.*|  tag: "${IMAGE_TAG}"|' helm-chart/values.yaml
+                        sed -i 's|tag: "flask-app.*|tag: "${IMAGE_TAG}"|' helm-chart/values.yaml
                     """
                     withCredentials([usernamePassword(credentialsId: 'github-cred',
                                               usernameVariable: 'GIT_USER',
                                               passwordVariable: 'GIT_TOKEN')]) {
-			sh """
-			    git config user.name "jenkins-bot"
-			    git config user.email "jenkins@local"
-
-			    # Rewrite remote URL to embed credentials
-			    git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/jogiraju/flask_pg-rest-api.git
-
-			    git add helm-chart/values.yaml
-			    git commit -m "Update Helm values.yaml with image tag ${IMAGE_TAG}" || echo "No changes to commit"
-			    git push origin HEAD:main
-			"""
+						sh """
+						    git config user.name "jenkins-bot"
+						    git config user.email "jenkins@local"
+			
+						    # Rewrite remote URL to embed credentials
+						    git remote set-url origin https://${GIT_USER}:${GIT_TOKEN}@github.com/jogiraju/flask_pg-rest-api.git
+			
+						    git add helm-chart/values.yaml
+						    git commit -m "Update Helm values.yaml with image tag ${IMAGE_TAG}" || echo "No changes to commit"
+						    git push origin HEAD:main
+						"""
                     }
-                    git branch: 'main', url: 'https://github.com/jogiraju/argo-flask-restapi.git'
-                    withCredentials([usernamePassword(credentialsId: 'github-cred', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                      sh """
-                            echo "Updating image tag in values.yaml to ${IMAGE_TAG}"
-                            sed -i 's|  tag:.*|  tag: ${IMAGE_TAG}|' values.yaml
-                      """
-                      sh '''
-                            git add values.yaml
-                            git commit -m 'Updated image tag'
-                            git remote set-url origin https://${GIT_PASSWORD}@github.com/jogiraju/argo-flask-restapi.git
-                            git push origin main
-                      '''
-                    }
+                    
                 }
             }
         }
     }
-
     post {
         always {
             echo "Pipeline completed with status: ${currentBuild.currentResult}"
