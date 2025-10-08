@@ -16,6 +16,8 @@ spec:
       labels:
         {{ include "flask-restapi-chart.selectorLabels" . | nindent 8 }}
     spec:
+      securityContext:
+        fsGroup: 999
       containers:
         - name: {{ .Chart.Name }}
           image: "{{ .Values.postgres.image.repository }}:{{ .Values.postgres.image.tag | default .Chart.AppVersion }}"
