@@ -28,12 +28,12 @@ spec:
             - secretRef:
                 name: db-secret      
           volumeMounts:
-            - name: mypgdata
+            - name: ourpgdata
               mountPath: /var/lib/postgresql/data 
               subPath: data
   volumeClaimTemplates:
     - metadata:
-        name: mypgdata
+        name: ourpgdata
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: {{ .Values.postgres.storageClass }}
