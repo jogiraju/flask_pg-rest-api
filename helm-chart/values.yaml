@@ -149,7 +149,7 @@ postgres:
     #tag: "16-alpine"
     tag: "15"
   storageSize: 200Mi 
-  storageClass: ssd-mydata-hostpath
+  storageClass: ssd-data-hostpath
   user: postgres 
   password: postgres 
   db: flask-db
