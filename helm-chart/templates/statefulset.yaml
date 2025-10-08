@@ -17,6 +17,8 @@ spec:
         {{ include "flask-restapi-chart.selectorLabels" . | nindent 8 }}
     spec:
       securityContext:
+        runAsUser: 999
+        runAsGroup: 999
         fsGroup: 999
       containers:
         - name: {{ .Chart.Name }}
@@ -30,12 +32,12 @@ spec:
             - secretRef:
                 name: db-secret      
           volumeMounts:
-            - name: mypgdata
+            - name: ourpgdata
               mountPath: /var/lib/postgresql/data 
               subPath: data
   volumeClaimTemplates:
     - metadata:
-        name: mypgdata
+        name: ourpgdata
       spec:
         accessModes: [ "ReadWriteOnce" ]
         storageClassName: {{ .Values.postgres.storageClass }}
