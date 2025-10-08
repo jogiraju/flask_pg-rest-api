@@ -17,7 +17,6 @@ spec:
         {{ include "flask-restapi-chart.selectorLabels" . | nindent 8 }}
     spec:
       securityContext:
-        enabled: true
         fsGroup: 999
       containers:
         - name: {{ .Chart.Name }}
